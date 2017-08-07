@@ -1,0 +1,6 @@
+.depend
+*~
+*.o
+examples/container
+examples/rootcontainer
+examples/widgets
