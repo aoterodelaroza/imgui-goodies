@@ -25,7 +25,8 @@ repo are:
   function, ii) the mouse goes from one tooltip element to another,
   and the tooltip is being shown, or iii) the mouse hovers a tooltip
   element for longer than t seconds and less than t seconds have
-  elapsed since the last tooltip was shown. See example below.
+  elapsed between the time the last tooltip was shown and the current
+  item started being hovered. See example below.
 
 * `imgui_dock.cpp`: a window docking system. There are three types of
   windows: 
