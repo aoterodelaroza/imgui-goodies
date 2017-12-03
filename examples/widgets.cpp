@@ -139,6 +139,33 @@ int main(int argc, char *argv[]){
     }
     End();
 
+    // ToolTip example.
+    SetNextWindowPos(ImVec2(520.f,290.f),ImGuiSetCond_FirstUseEver);
+    SetNextWindowSize(ImVec2(200.f,200.f),ImGuiSetCond_FirstUseEver);
+    if (Begin("Delayed tooltips example")){
+      const float delay = 1.5f;
+      const float maxwidth = 450.f;
+
+      ImGuiWindow* win2 = GetCurrentWindow();
+      PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f,0.f));
+      PushStyleColor(ImGuiCol_Button, ImColor(255, 128, 0));
+      PushStyleColor(ImGuiCol_ButtonHovered, ImColor(128, 0, 255));
+      Button("A",ImVec2(20.f,20.f)); SameLine();
+      AttachTooltip("A is for Apple",delay,maxwidth);
+      Button("B",ImVec2(20.f,20.f)); SameLine();
+      AttachTooltip("B is for Ball",delay,maxwidth);
+      Button("C",ImVec2(20.f,20.f));
+      AttachTooltip("C is for Cat",delay,maxwidth);
+      Button("D",ImVec2(20.f,20.f)); SameLine();
+      AttachTooltip("D is for Dog",delay,maxwidth);
+      Button("E",ImVec2(20.f,20.f)); SameLine();
+      AttachTooltip("E is for Elephant",delay,maxwidth);
+      Button("F",ImVec2(20.f,20.f));
+      AttachTooltip("F is for Fish",delay,maxwidth);
+      PopStyleColor(2);
+      PopStyleVar();
+    }
+    End();
     
     // Draw the current scene
     int w, h;

@@ -86,5 +86,10 @@ namespace ImGui{
   // Lift grip. A grip the with button colors drawn on the bottom left
   // corner of the window. True if the grip is clicked.
   bool LiftGrip(const char *label, ImGuiWindow* window);
+
+  // Associate a tooltip to the last element. The tooltip has text desc
+  // and a delay equal to delay (in seconds). The tooltip has a maximum width
+  // of maxwidth.
+  void AttachTooltip(const char* desc, float delay, float maxwidth);
 } // namespace ImGui
 #endif

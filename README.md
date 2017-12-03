@@ -19,6 +19,14 @@ repo are:
   + `LiftGrip`: a grip on the bottom left part of the window rendered in
   a different color. Responds to grabbing.
   
+  + `AttachTooltip`: a function that provides delayed
+  tooltips. Tooltips are shown if: i) the mouse hovers over the
+  element for longer than a certain time, passed as argument to the
+  function, ii) the mouse goes from one tooltip element to another,
+  and the tooltip is being shown, or iii) the mouse hovers a tooltip
+  element for longer than t seconds and less than t seconds have
+  elapsed since the last tooltip was shown. See example below.
+
 * `imgui_dock.cpp`: a window docking system. There are three types of
   windows: 
   
@@ -46,4 +54,7 @@ Docks, containers, and root containers:
 
 ![Example](images/dock_example.gif)
 
+Delayed tooltips:
+
+![Example](images/tooltip_example.gif)
 
