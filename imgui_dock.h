@@ -123,7 +123,7 @@ namespace ImGui{
     Status_ status = Status_None; // status of the docking window
     ImVec2 pos = {}; // position of the window
     ImVec2 pos_saved = {}; // position of the window (before docking)
-    ImVec2 size = {}; // size of the window
+    ImVec2 size = {-1.f,-1.f}; // size of the window
     ImVec2 size_saved = {}; // saved size (before docking for dockable window)
     ImGuiWindowFlags flags = 0; // flags for the window
     ImGuiWindowFlags flags_saved = 0; // flags for the window (before docking)
@@ -279,6 +279,13 @@ namespace ImGui{
     // the first pass and does not have the chance to save this
     // variable from the created window.
     void setDetachedDockSize(float x, float y);
+
+    // Close a dock window. This function is used to kill a dock
+    // externally. Unlike normal ImGui windows, making p_open false is
+    // not enough if the window is docked, because the container has to
+    // be modified, too. Therefore, CloseDock() should always be used
+    // when setting p_open = false.
+    void CloseDock();
   }; // struct Dock
 
   // Create a root container with the given label. If p_open, with a
@@ -303,7 +310,8 @@ namespace ImGui{
   // oncedock, dock to that container in the first pass. Returns true
   // if the window is open and accepts items (same as ImGui's
   // Begin). The EndDock() function needs to be used after all items
-  // have been added.
+  // have been added. See CloseDock() note above for how to set
+  // p_open externally to close a dock.
   bool BeginDock(const char* label, bool* p_open=nullptr, ImGuiWindowFlags extra_flags=0, 
                   DockFlags dock_flags=0, Dock *oncedock=nullptr);
   void EndDock();
