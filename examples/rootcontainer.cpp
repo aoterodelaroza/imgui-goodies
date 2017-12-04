@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
   glfwMakeContextCurrent(rootwin);
 
   // Setup ImGui binding
-  ImGui_ImplGlfw_Init(rootwin, true);
+  ImGui_ImplGlfwGL2_Init(rootwin, true);
 
   // GUI settings
   ImGuiIO& io = GetIO();
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
   while (!glfwWindowShouldClose(rootwin)){
     // New frame
     glfwPollEvents();
-    ImGui_ImplGlfw_NewFrame();
+    ImGui_ImplGlfwGL2_NewFrame();
     ImGuiContext *g = GetCurrentContext();
     static bool first = true;
 
@@ -214,7 +214,7 @@ int main(int argc, char *argv[]){
 
   // Cleanup
   ShutdownDock();
-  ImGui_ImplGlfw_Shutdown();
+  ImGui_ImplGlfwGL2_Shutdown();
   glfwTerminate();
 
   return 0;

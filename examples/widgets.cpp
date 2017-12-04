@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
   glfwMakeContextCurrent(rootwin);
 
   // Setup ImGui binding
-  ImGui_ImplGlfw_Init(rootwin, true);
+  ImGui_ImplGlfwGL2_Init(rootwin, true);
 
   // GUI settings
   ImGuiIO& io = GetIO();
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
   while (!glfwWindowShouldClose(rootwin)){
     // New frame
     glfwPollEvents();
-    ImGui_ImplGlfw_NewFrame();
+    ImGui_ImplGlfwGL2_NewFrame();
     ImGuiContext *g = GetCurrentContext();
 
     // Main menu bar
@@ -148,8 +148,8 @@ int main(int argc, char *argv[]){
 
       ImGuiWindow* win2 = GetCurrentWindow();
       PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f,0.f));
-      PushStyleColor(ImGuiCol_Button, ImColor(255, 128, 0));
-      PushStyleColor(ImGuiCol_ButtonHovered, ImColor(128, 0, 255));
+      PushStyleColor(ImGuiCol_Button, ImVec4(1.f, 0.5f, 0.f, 1.f));
+      PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.f, 1.f, 1.f));
       Button("A",ImVec2(20.f,20.f)); SameLine();
       AttachTooltip("A is for Apple",delay,maxwidth);
       Button("B",ImVec2(20.f,20.f)); SameLine();
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]){
 
   // Cleanup
   ShutdownDock();
-  ImGui_ImplGlfw_Shutdown();
+  ImGui_ImplGlfwGL2_Shutdown();
   glfwTerminate();
 
   return 0;
