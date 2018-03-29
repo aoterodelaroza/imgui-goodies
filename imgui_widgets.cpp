@@ -22,7 +22,9 @@
 #include "imgui_widgets.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+
 #include <algorithm>
+#include <unordered_map>
 
 using namespace ImGui;
 
@@ -58,20 +60,54 @@ static bool tooltip_washovered = false;
 static float tooltip_time = 0.f;
 static float tooltip_lastactive = 0.f;
 
+// Variable for the widget styles
+ImGuiStyleWidgets_ ImGuiStyleWidgets;
+
 // Function definitions //
+
+bool ImGui::IsMouseHoveringConvexPoly(const ImVec2* points, const int num_points){
+    ImGuiContext& g = *GImGui;
+
+    float p0[num_points][2];
+    
+    // differences
+    for (int i = 0; i < num_points; i++){
+      p0[i][0] = points[i].x - g.IO.MousePos.x;
+      p0[i][1] = points[i].y - g.IO.MousePos.y;
+    }
+
+    // first sign
+    float a0 = p0[0][0] * p0[num_points-1][1] - p0[num_points-1][0] * p0[0][1];
+
+    // compare to all other signs
+    for (int i = 0; i < num_points-1; i++){
+      float a = p0[i+1][0] * p0[i][1] - p0[i][0] * p0[i+1][1];
+      if (a * a0 < 0.f) 
+	return false;
+    }
+
+    return true;
+}
 
 void ImGui::SlidingBar(const char *label, ImGuiWindow* window, ImVec2 *pos, 
                        ImVec2 size, float minx, float maxx, int direction){
   ImDrawList* dl = window->DrawList;
   ImGuiContext *g = GetCurrentContext();
   bool hovered, held;
-  const ImU32 color = GetColorU32(ImGuiCol_ResizeGrip);
-  const ImU32 coloractive = GetColorU32(ImGuiCol_ResizeGripActive);
-  const ImU32 colorhovered = GetColorU32(ImGuiCol_ResizeGripHovered);
+  const ImU32 color = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_Slidingbar]);
+  const ImU32 coloractive = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_SlidingbarActive]);
+  const ImU32 colorhovered = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_SlidingbarHovered]);
   
   const ImRect slidingrect(*pos,*pos+size);
   const ImGuiID slidingid = window->GetID(label);
   ButtonBehavior(slidingrect, slidingid, &hovered, &held);
+
+  if (hovered || held){
+    if (direction == 1)
+      SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+    else
+      SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+  }
 
   if (held){
     if (direction == 1)
@@ -88,23 +124,23 @@ void ImGui::SlidingBar(const char *label, ImGuiWindow* window, ImVec2 *pos,
   dl->PopClipRect();
 }
 
-bool ImGui::ButtonWithX(const char* label, const ImVec2& size, bool activetab, bool scrollbarcol,
+bool ImGui::ButtonWithX(const char* label, const ImVec2& size, bool activetab,
                         bool *p_open, bool *dragged, bool *dclicked, float alphamul /*=1.f*/){
-  // lengths and colors
   ImGuiContext *g = GetCurrentContext();
   const float crossz = round(0.3 * g->FontSize);
-  const float crosswidth = 2 * crossz + 6;
+  const float crosswidth = 3.5f * crossz + 6;
   const float mintabwidth = 2 * crosswidth + 1;
-  const ImU32 cross_color = GetColorU32(ImGuiCol_Text,alphamul);
-  const ImU32 cross_color_hovered = GetColorU32(ImGuiCol_TextSelectedBg,alphamul);
-  ImU32 color = GetColorU32(ImGuiCol_FrameBg,alphamul);
-  ImU32 color_active = GetColorU32(ImGuiCol_FrameBgActive,alphamul);
-  ImU32 color_hovered = GetColorU32(ImGuiCol_FrameBgHovered,alphamul);
-  if (scrollbarcol){
-    color = GetColorU32(ImGuiCol_ScrollbarGrab,alphamul);
-    color_active = GetColorU32(ImGuiCol_ScrollbarGrabActive,alphamul);
-    color_hovered = GetColorU32(ImGuiCol_ScrollbarGrabHovered,alphamul);
-  }
+
+  const ImU32 colorxfg = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_TabXFg]);
+  const ImU32 colorxfg_hovered = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_TabXFgHovered]);
+  const ImU32 colorxfg_pressed = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_TabXFgActive]);
+  const ImU32 colorxbg = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_TabXBg]);
+  const ImU32 colorxbg_hovered = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_TabXBgHovered]);
+  const ImU32 colorxbg_pressed = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_TabXBgActive]);
+  ImU32 color = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_Tab]);
+  ImU32 color_active  = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_TabActive]);
+  ImU32 color_pressed = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_TabPressed]);
+  ImU32 color_hovered = GetColorU32(ImGuiStyleWidgets.Colors[ImGuiColWidgets_TabHovered]);
 
   // size of the main button
   ImVec2 mainsize = size;
@@ -120,11 +156,13 @@ bool ImGui::ButtonWithX(const char* label, const ImVec2& size, bool activetab, b
   ImVec2 pos1s = GetItemRectMax();
 
   // set the output flags for the main button
+  bool pressed = IsItemActive() && IsMouseDown(0);
   *dragged = IsItemActive() && IsMouseDragging();
   *dclicked = IsItemActive() && IsMouseDoubleClicked(0);
   
   // draw the close button, if this window can be closed
   ImVec2 center;
+  bool xhovered = false, xpressed = false;
   if (p_open && size.x >= mintabwidth){
     // draw the close button itself
     SameLine();
@@ -137,7 +175,9 @@ bool ImGui::ButtonWithX(const char* label, const ImVec2& size, bool activetab, b
 
     // update output flags and variables for drawing
     *dragged = *dragged | (p_open && IsItemActive() && IsMouseDragging());
-    hovered |= IsItemHovered();
+    xhovered = IsItemHovered();
+    hovered |= xhovered;
+    xpressed = IsItemActive() && IsMouseDown(0);
     center = ((GetItemRectMin() + GetItemRectMax()) * 0.5f);
   }
   ImVec2 pos1 = GetItemRectMax();
@@ -147,14 +187,30 @@ bool ImGui::ButtonWithX(const char* label, const ImVec2& size, bool activetab, b
   const char* text_end = FindRenderedTextEnd(label);
   ImVec2 text_size = CalcTextSize(label,text_end,true,false);
   ImRect clip_rect = ImRect(pos0,pos1s);
-  drawl->AddRectFilled(pos0,pos1,hovered?color_hovered:(activetab?color_active:color));
-  drawl->AddRect(pos0,pos1,color_active,0.0f,~0,1.0f);
+  drawl->AddRectFilled(pos0,pos1,activetab? color_active:
+                       pressed? color_pressed:
+                       hovered? color_hovered:
+                       color,ImGuiStyleWidgets.TabRounding,ImDrawCornerFlags_TopLeft|ImDrawCornerFlags_TopRight);
+
+  if (ImGuiStyleWidgets.TabBorderSize > 0.0f)
+    drawl->AddRect(pos0,pos1,GetColorU32(g->Style.Colors[ImGuiColWidgets_TabBorder]),
+		   ImGuiStyleWidgets.TabRounding,ImDrawCornerFlags_TopLeft|ImDrawCornerFlags_TopRight,1.0f);
   RenderTextClipped(pos0,pos1s,label,text_end,&text_size, ImVec2(0.5f,0.5f), &clip_rect);
   
   // draw the "x"
   if (p_open && size.x >= mintabwidth){
-    drawl->AddLine(center+ImVec2(-crossz,-crossz), center+ImVec2(crossz,crossz),IsItemHovered()?cross_color_hovered:cross_color);
-    drawl->AddLine(center+ImVec2( crossz,-crossz), center+ImVec2(-crossz,crossz),IsItemHovered()?cross_color_hovered:cross_color);
+    drawl->AddCircleFilled(center,crossz * sqrt(2.f) * 1.25f,
+                           xpressed?colorxbg_pressed:
+                           xhovered?colorxbg_hovered:
+                           colorxbg,36);
+    drawl->AddLine(center+ImVec2(-crossz,-crossz), center+ImVec2(crossz,crossz),
+                   xpressed?colorxfg_pressed:
+                   xhovered?colorxfg_hovered:
+                   colorxfg);
+    drawl->AddLine(center+ImVec2( crossz,-crossz), center+ImVec2(-crossz,crossz),
+                   xpressed?colorxfg_pressed:
+                   xhovered?colorxfg_hovered:
+                   colorxfg);
   }
 
   return clicked;
@@ -243,7 +299,9 @@ bool ImGui::LiftGrip(const char *label, ImGuiWindow* window){
   ButtonBehavior(lift_rect, lift_id, &hovered, &held, ImGuiButtonFlags_FlattenChilds);
 
   // lift grip (from imgui.cpp's resize grip)
-  ImU32 lift_col = GetColorU32(held ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+  ImU32 lift_col = GetColorU32(held?ImGuiStyleWidgets.Colors[ImGuiColWidgets_LiftGripActive]: 
+                               hovered?ImGuiStyleWidgets.Colors[ImGuiColWidgets_LiftGripHovered]: 
+                               ImGuiStyleWidgets.Colors[ImGuiColWidgets_LiftGrip]);
   dl->PathLineTo(bl + ImVec2(window->WindowBorderSize, -lift_corner_size));
   dl->PathLineTo(bl + ImVec2(lift_corner_size, -window->WindowBorderSize));
   dl->PathArcToFast(ImVec2(bl.x + g->Style.WindowRounding + window->WindowBorderSize, bl.y - g->Style.WindowRounding - window->WindowBorderSize), g->Style.WindowRounding, 3, 6);
@@ -254,7 +312,52 @@ bool ImGui::LiftGrip(const char *label, ImGuiWindow* window){
   return held && IsMouseDragging();
 }
 
-void ImGui::AttachTooltip(const char* desc, float delay, float maxwidth){
+bool ImGui::ImageInteractive(ImTextureID texture, float a, bool *hover, ImRect *vrect){
+  ImGuiWindow *win = GetCurrentWindow(); 
+  if (win->SkipItems)
+    return false;
+  ImGuiContext *g = GetCurrentContext();
+
+  PushID((void *)texture);
+  const ImGuiID id = win->GetID("#imageinteractive");
+  PopID();
+
+  vrect->Min = win->DC.CursorPos;
+  vrect->Max = win->DC.CursorPos + win->ContentsRegionRect.Max - (win->DC.CursorPos - win->Pos + ImVec2(1.f,1.f));
+
+  if (!ItemAdd(*vrect, id))
+      return false;
+
+  float x = vrect->Max.x - vrect->Min.x;
+  float y = vrect->Max.y - vrect->Min.y;
+  float xratio = x/fmax(x,y);
+  float yratio = y/fmax(x,y);
+  float rx = 0.5f * (1.f - xratio) * a;
+  float ry = 0.5f * (1.f - yratio) * a;
+
+  bool held;
+  bool pressed = ButtonBehavior(*vrect, id, hover, &held);
+  win->DrawList->AddImage(texture,vrect->Min,vrect->Max,ImVec2(rx, a - ry),ImVec2(a - rx, ry));
+}
+
+bool ImGui::InvisibleButtonEx(const char* str_id, const ImVec2& size_arg, bool* hovered, bool *held){
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    const ImGuiID id = window->GetID(str_id);
+    ImVec2 size = CalcItemSize(size_arg, 0.0f, 0.0f);
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size);
+    ItemSize(bb);
+    if (!ItemAdd(bb, id))
+        return false;
+
+    bool pressed = ButtonBehavior(bb, id, hovered, held);
+
+    return pressed;
+}
+
+void ImGui::AttachTooltip(const char* desc, float delay, float maxwidth, ImFont* font){
   ImGuiContext *g = GetCurrentContext();
   ImGuiID id = g->CurrentWindow->DC.LastItemId;
   float time = GetTime();
@@ -289,7 +392,9 @@ void ImGui::AttachTooltip(const char* desc, float delay, float maxwidth){
       tooltip_lastactive = time;
       BeginTooltip();
       PushTextWrapPos(maxwidth);
+      PushFont(font);
       TextUnformatted(desc);
+      PopFont();
       PopTextWrapPos();
       EndTooltip();
     }

@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
     SetNextWindowSize(ImVec2(200.f,200.f),ImGuiSetCond_FirstUseEver);
     if (Begin("Button with X example")){
       bool p_open = true, dragged, dclicked, closeclicked;
-      bool clicked = ButtonWithX("Click me!", ImVec2(80.f,20.f), false, true, &p_open, &dragged, &dclicked);
+      bool clicked = ButtonWithX("Click me!", ImVec2(80.f,20.f), false, &p_open, &dragged, &dclicked);
       if (clicked)
         printf("Clicked!\n");
       if (!p_open)
@@ -151,17 +151,17 @@ int main(int argc, char *argv[]){
       PushStyleColor(ImGuiCol_Button, ImVec4(1.f, 0.5f, 0.f, 1.f));
       PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.f, 1.f, 1.f));
       Button("A",ImVec2(20.f,20.f)); SameLine();
-      AttachTooltip("A is for Apple",delay,maxwidth);
+      AttachTooltip("A is for Apple",delay,maxwidth,io.FontDefault);
       Button("B",ImVec2(20.f,20.f)); SameLine();
-      AttachTooltip("B is for Ball",delay,maxwidth);
+      AttachTooltip("B is for Ball",delay,maxwidth,io.FontDefault);
       Button("C",ImVec2(20.f,20.f));
-      AttachTooltip("C is for Cat",delay,maxwidth);
+      AttachTooltip("C is for Cat",delay,maxwidth,io.FontDefault);
       Button("D",ImVec2(20.f,20.f)); SameLine();
-      AttachTooltip("D is for Dog",delay,maxwidth);
+      AttachTooltip("D is for Dog",delay,maxwidth,io.FontDefault);
       Button("E",ImVec2(20.f,20.f)); SameLine();
-      AttachTooltip("E is for Elephant",delay,maxwidth);
+      AttachTooltip("E is for Elephant",delay,maxwidth,io.FontDefault);
       Button("F",ImVec2(20.f,20.f));
-      AttachTooltip("F is for Fish",delay,maxwidth);
+      AttachTooltip("F is for Fish",delay,maxwidth,io.FontDefault);
       PopStyleColor(2);
       PopStyleVar();
     }

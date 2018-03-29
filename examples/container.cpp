@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
             printf("Clicked in dock %d\n",i);
           }
         }
-        End();
+        EndDock();
       }
     }
     
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]){
           }
         }
         Dock *dtmp = GetCurrentDock();
-        End();
+        EndDock();
         if (first)
           dtmp->setDetachedDockSize(100.f, 100.f);
       }
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]){
         }
       }
       Dock *dtmp = GetCurrentDock();
-      End();
+      EndDock();
       if (first)
         dtmp->setDetachedDockSize(100.f, 100.f);
     }

@@ -97,14 +97,15 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <list>
-
-using namespace std;
+#include <string>
 
 namespace ImGui{
 
   typedef int DockFlags;
 
   struct Dock{
+    enum Drop_ {Drop_None, Drop_Top, Drop_Right, Drop_Bottom, Drop_Left, Drop_Tab};
+
     // Enum for the type of docking windows
     enum Type_{Type_None,Type_Root,Type_Container,Type_Dock,Type_Horizontal,
                Type_Vertical};
@@ -134,10 +135,13 @@ namespace ImGui{
     float tabdz = 0.f; // z position for the end of the tab bar (container)
     ImGuiWindow* tabwin = nullptr; // pointer to the tab window (for cleaning up the window stack)
     ImVector<float> tabsx = {}; // tab positions for container; sliders for h/v-container
-    ImVector<bool> tabsfixed = {}; // whether a slider is fixed.
+    int splithint = 0; // hint to tell which bar should be removed when lifted (0 = any, +1 right/up, -1 left/down)
+    ImVec2 splitweight = {1.f,1.f}; // relative weight of this dock - used to set the initial position of the bar in a h-v split
     bool hidden = false; // whether a docked window is hidden
+    bool noborder = false; // flag if we pushed to have no border
+    bool showingdrops = false; // true if we are showing the drop targets for this dock
     bool hoverable = true; // whether a window responds to being hovered
-    list<Dock *> stack = {}; // stack of docks at this level
+    std::list<Dock *> stack = {}; // stack of docks at this level
     Dock *currenttab = nullptr; // currently selected tab (container)
     Dock *parent = nullptr; // immediate dock to which this is dock
     Dock *root = nullptr; // root container to which this is docked
@@ -154,7 +158,10 @@ namespace ImGui{
     bool IsMouseHoveringTabBar();
     // Is the mouse hovering the drop edges of a container? (no rectangle clipping)
     // Returns the edge id.
-    int IsMouseHoveringEdge();
+    Drop_ IsMouseHoveringEdge();
+    // Returns true if the mouse is hovering the drop target when the container
+    // is empty. (no rectangle clipping)
+    bool IsMouseHoveringFull();
     // Get the nearest tab border in the tab when hovering a
     // container. Returns the tab number or -1 if the tab bar is not
     // hovered or there are no tabs.
@@ -166,7 +173,7 @@ namespace ImGui{
     void showDropTargetOnTabBar();
     // Show the drop targets on the edge of the container. edge is the
     // id for the edge (1:top, 2:right, 3:bottom, 4:left).
-    void showDropTargetEdge(int edge);
+    void showDropTargetEdge(Drop_ edge, bool active);
 
     // Find the integer index of dock dthis in the stack of this
     // container or h/v-container.
@@ -186,13 +193,16 @@ namespace ImGui{
     // (type==Type_Vertical) container. The new container has the
     // current dock plus container dcont (if null, a new dcont is
     // allocated). The new container is placed before (before==true)
-    // or after (false) the old one. Returns the new container.
-    Dock *OpRoot_ReplaceHV(Type_ type,bool before,Dock *dcont=nullptr);
+    // or after (false) the old one and the split uses weight for the
+    // splitweight of the new container if dcont=null. Returns the new
+    // container.
+    Dock *OpRoot_ReplaceHV(Type_ type,bool before,Dock *dcont=nullptr,ImVec2 weight={1.f,1.f});
     // Add a new container (dcont) to the horizontal/vertical parent
     // of this dock.  If !dcont, a new container is allocated. The new
     // container is placed before (before==true) or after (false) the
-    // old one, and is returned by this function.
-    Dock *OpRoot_AddToHV(bool before,Dock *dcont=nullptr);
+    // old one, and is returned by this function. The split uses
+    // weight for the splitweight of the new container if dcont=null.
+    Dock *OpRoot_AddToHV(bool before,Dock *dcont=nullptr,ImVec2 weight={1.f,1.f});
     // Fill an empty root container with at least one empty automatic
     // container. 
     void OpRoot_FillEmpty();
@@ -221,7 +231,7 @@ namespace ImGui{
     // 2:right, 3:bottom, 4:left). edge = 5 is used to add to or
     // replace an automatic container in an empty root container.
     // Returns the new container.
-    Dock *newDockRoot(Dock *dnew, int iedge);
+    Dock *newDockRoot(Dock *dnew, Drop_ iedge);
 
     // Undock a container, restore its position, size, etc. flags, and
     // place it at the top or the bottom of the window stack. The
@@ -260,7 +270,7 @@ namespace ImGui{
     // which is docked to a root container. xpos is the position of
     // the bar given as a fraction of the window size (between 0 and
     // 1).
-    void setSlidingBarPosition(int iedge, float xpos);
+    void setSlidingBarPosition(Drop_ iedge, float xpos);
     // Traverse the tree of this root container and draw all sliding
     // bars in it. Sets the tabsx vector containing the positions of
     // the bars. root is a pointer to the root container. Recursive.
@@ -274,11 +284,20 @@ namespace ImGui{
     // number of docked windows in the root container. Recursive.
     void drawRootContainer(Dock* root, Dock **lift, Dock **erased, int *count = nullptr);
 
+    // Sets the position of this dock/container in its detached
+    // state. Useful when a dock/container is immediately attached in
+    // the first pass and does not have the chance to save this
+    // variable from the created window.
+    void setDetachedDockPosition(float x, float y);
+
     // Sets the size of this dock/container in its detached
     // state. Useful when a dock/container is immediately attached in
     // the first pass and does not have the chance to save this
     // variable from the created window.
     void setDetachedDockSize(float x, float y);
+
+    // Set the h-v split weight for this dock.
+    void setSplitWeight(float wx,float wy);
 
     // Close a dock window. This function is used to kill a dock
     // externally. Unlike normal ImGui windows, making p_open false is

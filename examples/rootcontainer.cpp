@@ -122,7 +122,7 @@ int main(int argc, char *argv[]){
             printf("Clicked in dock %d\n",i);
           }
         }
-        End();
+        EndDock();
       }
     }
     
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]){
           }
         }
         Dock *dtmp = GetCurrentDock();
-        End();
+        EndDock();
         if (first)
           dtmp->setDetachedDockSize(100.f, 100.f);
       }
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]){
         }
       }
       Dock *dtmp = GetCurrentDock();
-      End();
+      EndDock();
       if (first)
         dtmp->setDetachedDockSize(100.f, 100.f);
     }
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]){
       }
     }
     Dock *dbleh1 = GetCurrentDock();
-    End();
+    EndDock();
     if (first)
       dbleh1->setDetachedDockSize(100.f, 100.f);
     if (BeginDock("Bleh2",nullptr,ImGuiWindowFlags_NoResize)){
@@ -178,26 +178,26 @@ int main(int argc, char *argv[]){
       }
     }
     Dock *dbleh2 = GetCurrentDock();
-    End();
+    EndDock();
     if (first)
       dbleh2->setDetachedDockSize(100.f, 100.f);
 
-    // Dock some containers and docks in the root container
-    if (first){
-      // 1:top, 2:right, 3:bottom, 4:left, 5:replace
-      droot->newDockRoot(dcont1,5); // replace the automatic container
+    // // Dock some containers and docks in the root container
+    // if (first){
+    //   // 1:top, 2:right, 3:bottom, 4:left, 5:replace
+    //   droot->newDockRoot(dcont1,5); // replace the automatic container
 
-      dcont1->newDockRoot(dcont2,4); // dcont2 on the left of dcont1
-      dcont1->setSlidingBarPosition(4,0.3f); // set the bar on the left of dcont1
+    //   dcont1->newDockRoot(dcont2,4); // dcont2 on the left of dcont1
+    //   dcont1->setSlidingBarPosition(4,0.3f); // set the bar on the left of dcont1
 
-      // dock bleh1 below dcont1; save the created automatic container in dtmp
-      Dock *dtmp = dcont1->newDockRoot(dbleh1,3); 
-      dcont1->setSlidingBarPosition(3,0.4f);
+    //   // dock bleh1 below dcont1; save the created automatic container in dtmp
+    //   Dock *dtmp = dcont1->newDockRoot(dbleh1,3); 
+    //   dcont1->setSlidingBarPosition(3,0.4f);
       
-      // dock bleh2 on the right of bleh1
-      dtmp->newDockRoot(dbleh2,2); 
-      dcont1->setSlidingBarPosition(2,0.3f);
-    }
+    //   // dock bleh2 on the right of bleh1
+    //   dtmp->newDockRoot(dbleh2,2); 
+    //   dcont1->setSlidingBarPosition(2,0.3f);
+    // }
 
     // Draw the current scene
     int w, h;
