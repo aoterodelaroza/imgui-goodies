@@ -46,12 +46,14 @@ static inline ImVec4 OpaqueColor(ImGuiCol_ color, float newalpha){
   ImGuiContext *g = ImGui::GetCurrentContext();
   ImVec4 col = g->Style.Colors[color];
   col.w = newalpha;
+  return col;
 }
 static inline ImVec4 TransparentColor(ImGuiCol_ color){
   const float small_alpha = 1e-15;
   ImGuiContext *g = ImGui::GetCurrentContext();
   ImVec4 col = g->Style.Colors[color];
   col.w = small_alpha;
+  return col;
 }
 
 // Colors for the widgets

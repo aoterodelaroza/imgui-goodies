@@ -338,6 +338,7 @@ bool ImGui::ImageInteractive(ImTextureID texture, float a, bool *hover, ImRect *
   bool held;
   bool pressed = ButtonBehavior(*vrect, id, hover, &held);
   win->DrawList->AddImage(texture,vrect->Min,vrect->Max,ImVec2(rx, a - ry),ImVec2(a - rx, ry));
+  return true;
 }
 
 bool ImGui::InvisibleButtonEx(const char* str_id, const ImVec2& size_arg, bool* hovered, bool *held){
